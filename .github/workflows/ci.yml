@@ -58,6 +58,9 @@ jobs:
           # .verdaccio-cache
         # key: ts-jest-${{ matrix.platform }}-${{ matrix.node }}-${{ github.run_id }}
         # restore-keys: ts-jest-${{ matrix.platform }}-${{ matrix.node }}-
+    - name: Build pnpm
+      run: pnpm compile
+      timeout-minutes: 10
     - name: run tests (main)
       timeout-minutes: 60
       if: github.ref_name == 'main'
@@ -70,3 +73,23 @@ jobs:
       run: pnpm run test-branch
       env:
         PNPM_WORKERS: 3
+    - name: Pack pnpm tarball
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      working-directory: pnpm
+      run: pnpm pack
+    - name: Upload pnpm tarball
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      uses: actions/upload-artifact@v4
+      with:
+        name: pnpm-tarball
+        path: pnpm/pnpm-*.tgz
+        retention-days: 1
+        if-no-files-found: error
+    - name: Upload test reports
+      if: always() && matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-reports
+        path: '**/coverage/**'
+        retention-days: 1
+        if-no-files-found: warn
