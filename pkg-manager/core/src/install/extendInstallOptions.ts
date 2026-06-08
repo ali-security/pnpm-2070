@@ -253,7 +253,7 @@ const defaults = (opts: InstallOptions): StrictInstallOptions => {
     excludeLinksFromLockfile: false,
     virtualStoreDirMaxLength: 120,
     peersSuffixMaxLength: 1000,
-    blockExoticSubdeps: false,
+    blockExoticSubdeps: true,
   } as StrictInstallOptions
 }
 
