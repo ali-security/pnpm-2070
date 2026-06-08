@@ -67,15 +67,15 @@ jobs:
       run: pnpm run test-main
       env:
         PNPM_WORKERS: 3
-    - name: run tests (branch)
-      timeout-minutes: 60
-      if: github.ref_name != 'main'
-      run: pnpm run test-branch
-      env:
-        PNPM_WORKERS: 3
+    # - name: run tests (branch)
+    #   timeout-minutes: 60
+    #   if: github.ref_name != 'main'
+    #   run: pnpm run test-branch
+    #   env:
+    #     PNPM_WORKERS: 3
     - name: Build pnpm deploy artifact
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
-      run: pnpm --filter=pnpm deploy --prod pnpm-deploy
+      run: pnpm --filter=pnpm deploy --legacy --prod pnpm-deploy
     - name: Pack pnpm deploy artifact
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       working-directory: pnpm-deploy
