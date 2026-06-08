@@ -84,10 +84,12 @@ jobs:
     - name: Pack pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       working-directory: pnpm
-      # publish-packed populates dist/node_modules with prod deps; we invoke it
-      # explicitly because enablePrePostScripts=false in pnpm-workspace.yaml
-      # prevents `pnpm pack` from running the prepublishOnly lifecycle script.
+      # publish-packed pulls in esm@3 which crashes on Node 22, so we switch
+      # to Node 20 just for this step. We invoke publish-packed explicitly
+      # because enablePrePostScripts=false prevents `pnpm pack` from running
+      # the prepublishOnly lifecycle script.
       run: |
+        pnpm env use -g 20
         pnpm exec publish-packed --prune --npm-client=pnpm --dest=dist
         pnpm pack
     - name: Upload pnpm tarball
