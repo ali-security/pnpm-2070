@@ -77,23 +77,14 @@ jobs:
     #     PNPM_WORKERS: 3
     - name: Pack pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
-      # publish-packed pulls in esm@3 which crashes on Node 22, so we switch
-      # to Node 20 just for this step.
-      #
-      # We avoid publish-packed because its pnpm invocation hardcodes
-      # --no-lockfile, which re-resolves "latest compatible" versions on
-      # every run — bundled transitive deps drift forward over time and
-      # never match what's pinned in pnpm-lock.yaml.
-      #
-      # `pnpm deploy --legacy --prod` instead uses the workspace lockfile
-      # to stage exact prod-dep versions into a temp dir, then we copy
-      # node_modules into pnpm/dist/ (preserving relative symlinks intact,
-      # so the .pnpm virtual store still resolves at runtime).
+      # Bundle prod-dep closure pinned to workspace lockfile versions, then
+      # let pnpm pack pick up dist/ (including dist/node_modules) per the
+      # package's `files` field. We bypass publish-packed and `pnpm deploy
+      # --prod` because both ignore the workspace lockfile and re-resolve
+      # to latest matching versions on every run, causing the artifact to
+      # drift forward over time.
       run: |
-        pnpm env use -g 20
-        rm -rf /tmp/pnpm-deploy
-        pnpm --filter=pnpm deploy --legacy --prod /tmp/pnpm-deploy
-        cp -RP /tmp/pnpm-deploy/node_modules pnpm/dist/node_modules
+        node pnpm/scripts/bundle-prod-deps.mjs
         cd pnpm && pnpm pack
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
