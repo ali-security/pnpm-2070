@@ -88,11 +88,3 @@ jobs:
         path: pnpm-deploy.tgz
         retention-days: 1
         if-no-files-found: error
-    - name: Upload test reports
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-reports-${{ matrix.platform }}-node${{ matrix.node[0] }}
-        path: '**/coverage/**'
-        retention-days: 1
-        if-no-files-found: warn
