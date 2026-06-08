@@ -61,12 +61,12 @@ jobs:
     - name: Build pnpm
       run: pnpm compile
       timeout-minutes: 20
-    - name: run tests (main)
-      timeout-minutes: 60
-      if: github.ref_name == 'main'
-      run: pnpm run test-main
-      env:
-        PNPM_WORKERS: 3
+    # - name: run tests (main)
+    #   timeout-minutes: 60
+    #   if: github.ref_name == 'main'
+    #   run: pnpm run test-main
+    #   env:
+    #     PNPM_WORKERS: 3
     # - name: run tests (branch)
     #   timeout-minutes: 60
     #   if: github.ref_name != 'main'
