@@ -75,31 +75,41 @@ jobs:
     #   run: pnpm run test-branch
     #   env:
     #     PNPM_WORKERS: 3
+    - name: Configure time-machine registry pinned to pnpm@10.9.0 publish time
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      env:
+        VERSION: 10.9.0
+      # Pin npm resolution to the moment pnpm@10.9.0 was published, so
+      # publish-packed's bundled-dep closure matches what the original tarball
+      # shipped (instead of drifting to "latest matching" semver on every run).
+      # Written to $HOME/.npmrc because publish-packed's inner install runs
+      # with --ignore-workspace and skips project-local .npmrc files.
+      run: |
+        set -euo pipefail
+        tm_date="$(curl -fsSL "https://registry.npmjs.org/pnpm" \
+          | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).time[process.env.VERSION]))')"
+        echo "Pinning time-machine registry to pnpm@${VERSION} publish time: $tm_date"
+        cat > "$HOME/.npmrc" <<EOF
+        registry=https://time-machines-npm.sealsecurity.io/
+        //time-machines-npm.sealsecurity.io/:_authToken=$tm_date
+        EOF
     - name: Pack pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
-      working-directory: pnpm
-      # Snapshot dist/node_modules from the upstream pnpm@10.9.0 tarball so
-      # bundled deps match upstream bit-for-bit, then pack alongside the
-      # locally compiled dist/ output. Avoids the lockfile-pinned hoist
-      # problem (publish-packed / pnpm deploy --prod both re-resolve to
-      # latest matching on every run; no off-the-shelf tool produces a
-      # hoisted, lockfile-pinned, prod-only node_modules tree).
+      # prepublishOnly == `pnpm compile && publish-packed --prune --dest=dist`.
+      # With $HOME/.npmrc pinned to the time-machine above, publish-packed's
+      # inner install resolves bundled deps against the registry snapshot at
+      # pnpm@10.9.0's publish time — matching the original tarball's closure.
+      # We then rewrite the time-machine URL out of dist/'s bookkeeping
+      # (.modules.yaml, .pnpm/lock.yaml, etc.) back to registry.npmjs.org so
+      # the artifact carries public-registry provenance, not the internal mirror.
       run: |
-        echo "Fetching official pnpm@10.9.0 to snapshot its exact node_modules..."
-        npm pack pnpm@10.9.0
-
-        echo "Extracting bundled deps from upstream tarball..."
-        tar -xzf pnpm-10.9.0.tgz package/dist/node_modules
-
-        echo "Injecting upstream node_modules into local dist/..."
-        mkdir -p dist
-        rm -rf dist/node_modules
-        mv package/dist/node_modules dist/node_modules
-
-        rm -rf package pnpm-10.9.0.tgz
-
-        echo "Packing local workspace..."
-        pnpm pack
+        set -euo pipefail
+        pnpm --filter=pnpm run prepublishOnly
+        grep -rlF 'https://time-machines-npm.sealsecurity.io/' pnpm/dist 2>/dev/null \
+          | while IFS= read -r f; do
+              sed -i 's#https://time-machines-npm\.sealsecurity\.io/#https://registry.npmjs.org/#g' "$f"
+            done
+        cd pnpm && pnpm pack
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       uses: actions/upload-artifact@v4
