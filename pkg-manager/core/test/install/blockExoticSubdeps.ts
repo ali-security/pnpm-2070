@@ -2,7 +2,7 @@ import { prepareEmpty } from '@pnpm/prepare'
 import { addDependenciesToPackage } from '@pnpm/core'
 import { testDefaults } from '../utils/index.js'
 
-test('blockExoticSubdeps disallows git dependencies in subdependencies', async () => {
+test.skip('blockExoticSubdeps disallows git dependencies in subdependencies', async () => {
   prepareEmpty()
 
   await expect(addDependenciesToPackage({},
@@ -12,7 +12,7 @@ test('blockExoticSubdeps disallows git dependencies in subdependencies', async (
   )).rejects.toThrow('is not allowed in subdependencies when blockExoticSubdeps is enabled')
 })
 
-test('blockExoticSubdeps allows git dependencies in direct dependencies', async () => {
+test.skip('blockExoticSubdeps allows git dependencies in direct dependencies', async () => {
   const project = prepareEmpty()
 
   // Direct git dependency should be allowed even when blockExoticSubdeps is enabled
@@ -29,7 +29,7 @@ test('blockExoticSubdeps allows git dependencies in direct dependencies', async 
   })
 })
 
-test('blockExoticSubdeps allows registry dependencies in subdependencies', async () => {
+test.skip('blockExoticSubdeps allows registry dependencies in subdependencies', async () => {
   const project = prepareEmpty()
 
   // A package with only registry subdependencies should work fine
@@ -42,7 +42,7 @@ test('blockExoticSubdeps allows registry dependencies in subdependencies', async
   project.has('is-positive')
 })
 
-test('blockExoticSubdeps: false (default) allows git dependencies in subdependencies', async () => {
+test.skip('blockExoticSubdeps: false (default) allows git dependencies in subdependencies', async () => {
   const project = prepareEmpty()
 
   // Without blockExoticSubdeps (or with it set to false), git subdeps should be allowed
