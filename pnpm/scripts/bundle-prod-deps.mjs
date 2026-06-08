@@ -19,14 +19,37 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const require = createRequire(import.meta.url)
-const yaml = require('js-yaml')
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const workspaceRoot = path.resolve(__dirname, '..', '..')
 const lockfilePath = path.join(workspaceRoot, 'pnpm-lock.yaml')
 const dotPnpm = path.join(workspaceRoot, 'node_modules', '.pnpm')
 const outDir = path.resolve(__dirname, '..', 'dist', 'node_modules')
+
+// js-yaml isn't hoisted to the workspace root, so we can't `require('js-yaml')`
+// from this script's location. Locate it in node_modules/.pnpm/ instead.
+function loadYaml () {
+  if (!fs.existsSync(dotPnpm)) {
+    console.error(`error: ${dotPnpm} missing — run pnpm install first`)
+    process.exit(1)
+  }
+  // The workspace uses `js-yaml: npm:@zkochan/js-yaml@0.0.7` via catalog, but
+  // the real `js-yaml` package may also be installed transitively. Try both.
+  const candidates = []
+  for (const dir of fs.readdirSync(dotPnpm)) {
+    if (/^js-yaml@/.test(dir)) candidates.push([dir, 'js-yaml'])
+    if (/^@zkochan\+js-yaml@/.test(dir)) candidates.push([dir, '@zkochan/js-yaml'])
+  }
+  for (const [dir, subdir] of candidates) {
+    const pkgRoot = path.join(dotPnpm, dir, 'node_modules', subdir)
+    if (fs.existsSync(path.join(pkgRoot, 'package.json'))) {
+      const req = createRequire(path.join(pkgRoot, 'package.json'))
+      return req(pkgRoot)
+    }
+  }
+  console.error('error: js-yaml not found under node_modules/.pnpm/')
+  process.exit(1)
+}
+const yaml = loadYaml()
 
 console.error(`workspace: ${workspaceRoot}`)
 console.error(`output:    ${outDir}`)
