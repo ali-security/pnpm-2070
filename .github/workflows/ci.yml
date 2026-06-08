@@ -77,15 +77,29 @@ jobs:
     #     PNPM_WORKERS: 3
     - name: Pack pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
-      # Bundle prod-dep closure pinned to workspace lockfile versions, then
-      # let pnpm pack pick up dist/ (including dist/node_modules) per the
-      # package's `files` field. We bypass publish-packed and `pnpm deploy
-      # --prod` because both ignore the workspace lockfile and re-resolve
-      # to latest matching versions on every run, causing the artifact to
-      # drift forward over time.
+      working-directory: pnpm
+      # Snapshot dist/node_modules from the upstream pnpm@10.9.0 tarball so
+      # bundled deps match upstream bit-for-bit, then pack alongside the
+      # locally compiled dist/ output. Avoids the lockfile-pinned hoist
+      # problem (publish-packed / pnpm deploy --prod both re-resolve to
+      # latest matching on every run; no off-the-shelf tool produces a
+      # hoisted, lockfile-pinned, prod-only node_modules tree).
       run: |
-        node pnpm/scripts/bundle-prod-deps.mjs
-        cd pnpm && pnpm pack
+        echo "Fetching official pnpm@10.9.0 to snapshot its exact node_modules..."
+        npm pack pnpm@10.9.0
+
+        echo "Extracting bundled deps from upstream tarball..."
+        tar -xzf pnpm-10.9.0.tgz package/dist/node_modules
+
+        echo "Injecting upstream node_modules into local dist/..."
+        mkdir -p dist
+        rm -rf dist/node_modules
+        mv package/dist/node_modules dist/node_modules
+
+        rm -rf package pnpm-10.9.0.tgz
+
+        echo "Packing local workspace..."
+        pnpm pack
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       uses: actions/upload-artifact@v4
