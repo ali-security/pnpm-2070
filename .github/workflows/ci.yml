@@ -44,7 +44,15 @@ jobs:
       run: pnpm add --global npm@8
       timeout-minutes: 1
     - name: pnpm install
-      run: pnpm install --frozen-lockfile
+      # supportedArchitectures pulls @reflink/reflink binaries for all platforms
+      # so the bundled `pnpm` artifact contains reflink.{darwin,win32}-*.node
+      run: |
+        pnpm install --frozen-lockfile \
+          --config.supportedArchitectures.os=linux \
+          --config.supportedArchitectures.os=darwin \
+          --config.supportedArchitectures.os=win32 \
+          --config.supportedArchitectures.cpu=x64 \
+          --config.supportedArchitectures.cpu=arm64
       timeout-minutes: 5
     # - name: Cache TypeScript and Jest
       # uses: actions/cache@v3
@@ -76,7 +84,12 @@ jobs:
     - name: Pack pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       working-directory: pnpm
-      run: pnpm pack
+      # publish-packed populates dist/node_modules with prod deps; we invoke it
+      # explicitly because enablePrePostScripts=false in pnpm-workspace.yaml
+      # prevents `pnpm pack` from running the prepublishOnly lifecycle script.
+      run: |
+        pnpm exec publish-packed --prune --npm-client=pnpm --dest=dist
+        pnpm pack
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       uses: actions/upload-artifact@v4
