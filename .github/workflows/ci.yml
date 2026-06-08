@@ -73,16 +73,19 @@ jobs:
       run: pnpm run test-branch
       env:
         PNPM_WORKERS: 3
-    - name: Pack pnpm tarball
+    - name: Build pnpm deploy artifact
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
-      working-directory: pnpm
-      run: pnpm pack
+      run: pnpm --filter=pnpm deploy --prod pnpm-deploy
+    - name: Pack pnpm deploy artifact
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      working-directory: pnpm-deploy
+      run: tar -czf ../pnpm-deploy.tgz .
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       uses: actions/upload-artifact@v4
       with:
         name: pnpm-tarball
-        path: pnpm/pnpm-*.tgz
+        path: pnpm-deploy.tgz
         retention-days: 1
         if-no-files-found: error
     - name: Upload test reports
