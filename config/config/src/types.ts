@@ -80,7 +80,6 @@ export const types = Object.assign({
   'public-hoist-pattern': Array,
   'publish-branch': String,
   'recursive-install': Boolean,
-  'block-exotic-subdeps': Boolean,
   reporter: String,
   'resolution-mode': ['highest', 'time-based', 'lowest-direct'],
   'resolve-peers-from-workspace-root': Boolean,

@@ -172,7 +172,6 @@ export interface ResolutionContext {
   workspacePackages?: WorkspacePackages
   missingPeersOfChildrenByPkgId: Record<PkgResolutionId, { depth: number, missingPeersOfChildren: MissingPeersOfChildren }>
   hoistPeers?: boolean
-  blockExoticSubdeps?: boolean
 }
 
 export type MissingPeers = Record<string, { range: string, optional: boolean }>
@@ -1330,20 +1329,6 @@ async function resolveDependency (
     },
   })
 
-  if (
-    ctx.blockExoticSubdeps &&
-    options.currentDepth > 0 &&
-    !isNonExoticDep(pkgResponse.body.resolvedVia)
-  ) {
-    const error = new PnpmError(
-      'EXOTIC_SUBDEP',
-      `Exotic dependency "${wantedDependency.alias ?? wantedDependency.bareSpecifier}" (resolved via ${pkgResponse.body.resolvedVia}) is not allowed in subdependencies when blockExoticSubdeps is enabled`
-    )
-    error.prefix = options.prefix
-    error.pkgsStack = getPkgsInfoFromIds(options.parentIds, ctx.resolvedPkgsById)
-    throw error
-  }
-
   if (ctx.allPreferredVersions && pkgResponse.body.manifest?.version) {
     if (!ctx.allPreferredVersions[pkgResponse.body.manifest.name]) {
       ctx.allPreferredVersions[pkgResponse.body.manifest.name] = {}
@@ -1723,19 +1708,4 @@ function getCatalogReplacementBareSpecifier (
     : catalogLookup.specifier
 
   return replacementBareSpecifier
-}
-
-const NON_EXOTIC_RESOLVED_VIA = new Set([
-  'custom-resolver',
-  'github.com/denoland/deno',
-  'github.com/oven-sh/bun',
-  'jsr-registry',
-  'local-filesystem',
-  'nodejs.org',
-  'npm-registry',
-  'workspace',
-])
-
-function isNonExoticDep (resolvedVia: string | undefined): boolean {
-  return resolvedVia != null && NON_EXOTIC_RESOLVED_VIA.has(resolvedVia)
 }

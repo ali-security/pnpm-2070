@@ -122,7 +122,7 @@ test('from a github repo with different name', async () => {
   project.isExecutable('.bin/szia')
 })
 
-test.skip('a subdependency is from a github repo with different name', async () => {
+test('a subdependency is from a github repo with different name', async () => {
   const project = prepareEmpty()
 
   await addDependenciesToPackage({}, ['@pnpm.e2e/has-aliased-git-dependency'], testDefaults({ fastUnpack: false }))

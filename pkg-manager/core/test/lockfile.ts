@@ -586,7 +586,7 @@ test('packages are placed in devDependencies even if they are present as non-dev
 
 // This testcase verifies that pnpm is not failing when trying to preserve dependencies.
 // Only when a dependency is a range dependency, should pnpm try to compare versions of deps with semver.satisfies().
-test.skip('updating package that has a github-hosted dependency', async () => {
+test('updating package that has a github-hosted dependency', async () => {
   prepareEmpty()
 
   const { updatedManifest: manifest } = await addDependenciesToPackage({}, ['@pnpm.e2e/has-github-dep@1'], testDefaults())
