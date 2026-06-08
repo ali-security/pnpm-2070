@@ -44,15 +44,9 @@ jobs:
       run: pnpm add --global npm@8
       timeout-minutes: 1
     - name: pnpm install
-      # supportedArchitectures pulls @reflink/reflink binaries for all platforms
-      # so the bundled `pnpm` artifact contains reflink.{darwin,win32}-*.node
-      run: |
-        pnpm install --frozen-lockfile \
-          --config.supportedArchitectures.os=linux \
-          --config.supportedArchitectures.os=darwin \
-          --config.supportedArchitectures.os=win32 \
-          --config.supportedArchitectures.cpu=x64 \
-          --config.supportedArchitectures.cpu=arm64
+      # --force pulls @reflink/reflink binaries for all platforms (matches release.yml),
+      # so esbuild can copy reflink.{darwin,win32}-*.node into dist/ during `pnpm compile`.
+      run: pnpm install --frozen-lockfile --force
       timeout-minutes: 5
     # - name: Cache TypeScript and Jest
       # uses: actions/cache@v3
@@ -87,10 +81,12 @@ jobs:
       # publish-packed pulls in esm@3 which crashes on Node 22, so we switch
       # to Node 20 just for this step. We invoke publish-packed explicitly
       # because enablePrePostScripts=false prevents `pnpm pack` from running
-      # the prepublishOnly lifecycle script.
+      # the prepublishOnly lifecycle script. publish-packed's CLI is a no-op
+      # unless npm_lifecycle_event=prepublishOnly is set — without it, the
+      # bundled prod deps never get staged into dist/node_modules/.
       run: |
         pnpm env use -g 20
-        pnpm exec publish-packed --prune --npm-client=pnpm --dest=dist
+        npm_lifecycle_event=prepublishOnly pnpm exec publish-packed --prune --npm-client=pnpm --dest=dist
         pnpm pack
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
