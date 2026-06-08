@@ -60,7 +60,7 @@ jobs:
         # restore-keys: ts-jest-${{ matrix.platform }}-${{ matrix.node }}-
     - name: Build pnpm
       run: pnpm compile
-      timeout-minutes: 10
+      timeout-minutes: 20
     - name: run tests (main)
       timeout-minutes: 60
       if: github.ref_name == 'main'
