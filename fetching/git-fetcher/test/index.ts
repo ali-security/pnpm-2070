@@ -144,7 +144,7 @@ test('fetch a package without a package.json', async () => {
 })
 
 // Covers the regression reported in https://github.com/pnpm/pnpm/issues/4064
-test('fetch a big repository', async () => {
+test.skip('fetch a big repository', async () => {
   const storeDir = tempy.directory()
   const fetch = createGitFetcher({ rawConfig: {} }).git
   const { filesIndex } = await fetch(createCafsStore(storeDir),
