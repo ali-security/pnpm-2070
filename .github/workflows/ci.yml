@@ -76,7 +76,7 @@ jobs:
     #   env:
     #     PNPM_WORKERS: 3
     - name: Configure time-machine registry pinned to pnpm@10.9.0 publish time
-      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 20
       env:
         VERSION: 10.9.0
       # Pin npm resolution to the moment pnpm@10.9.0 was published, so
@@ -94,7 +94,7 @@ jobs:
         //time-machines-npm.sealsecurity.io/:_authToken=$tm_date
         EOF
     - name: Pack pnpm tarball
-      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 20
       # prepublishOnly == `pnpm compile && publish-packed --prune --dest=dist`.
       # With $HOME/.npmrc pinned to the time-machine above, publish-packed's
       # inner install resolves bundled deps against the registry snapshot at
@@ -111,7 +111,7 @@ jobs:
             done
         cd pnpm && pnpm pack
     - name: Upload pnpm tarball
-      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
+      if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 20
       uses: actions/upload-artifact@v4
       with:
         name: pnpm-tarball
