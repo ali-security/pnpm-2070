@@ -63,18 +63,18 @@ jobs:
     - name: Build pnpm
       run: pnpm compile
       timeout-minutes: 20
-    # - name: run tests (main)
-    #   timeout-minutes: 60
-    #   if: github.ref_name == 'main'
-    #   run: pnpm run test-main
-    #   env:
-    #     PNPM_WORKERS: 3
-    # - name: run tests (branch)
-    #   timeout-minutes: 60
-    #   if: github.ref_name != 'main'
-    #   run: pnpm run test-branch
-    #   env:
-    #     PNPM_WORKERS: 3
+     - name: run tests (main)
+       timeout-minutes: 60
+       if: github.ref_name == 'main'
+       run: pnpm run test-main
+       env:
+         PNPM_WORKERS: 3
+     - name: run tests (branch)
+       timeout-minutes: 60
+       if: github.ref_name != 'main'
+       run: pnpm run test-branch
+       env:
+         PNPM_WORKERS: 3
     - name: Configure time-machine registry pinned to pnpm@10.9.0 publish time
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 20
       env:
