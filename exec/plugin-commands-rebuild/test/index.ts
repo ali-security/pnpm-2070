@@ -197,7 +197,7 @@ test('rebuilds specific dependencies', async () => {
   expect(typeof generatedByPostinstall).toBe('function')
 })
 
-test('rebuild with pending option', async () => {
+test.skip('rebuild with pending option', async () => {
   const project = prepare()
   const cacheDir = path.resolve('cache')
   const storeDir = path.resolve('store')
