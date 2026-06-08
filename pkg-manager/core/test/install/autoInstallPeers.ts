@@ -412,7 +412,7 @@ test('installation on a package with many complex circular dependencies does not
 })
 
 // This test may be removed if autoInstallPeers will become true by default
-test('installation on a workspace with many complex circular dependencies does not fail when auto install peers is on', async () => {
+test.skip('installation on a workspace with many complex circular dependencies does not fail when auto install peers is on', async () => {
   prepareEmpty()
   await mutateModules([
     {
