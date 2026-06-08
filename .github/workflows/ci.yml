@@ -77,17 +77,24 @@ jobs:
     #     PNPM_WORKERS: 3
     - name: Pack pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
-      working-directory: pnpm
       # publish-packed pulls in esm@3 which crashes on Node 22, so we switch
-      # to Node 20 just for this step. We invoke publish-packed explicitly
-      # because enablePrePostScripts=false prevents `pnpm pack` from running
-      # the prepublishOnly lifecycle script. publish-packed's CLI is a no-op
-      # unless npm_lifecycle_event=prepublishOnly is set — without it, the
-      # bundled prod deps never get staged into dist/node_modules/.
+      # to Node 20 just for this step.
+      #
+      # We avoid publish-packed because its pnpm invocation hardcodes
+      # --no-lockfile, which re-resolves "latest compatible" versions on
+      # every run — bundled transitive deps drift forward over time and
+      # never match what's pinned in pnpm-lock.yaml.
+      #
+      # `pnpm deploy --legacy --prod` instead uses the workspace lockfile
+      # to stage exact prod-dep versions into a temp dir, then we copy
+      # node_modules into pnpm/dist/ (preserving relative symlinks intact,
+      # so the .pnpm virtual store still resolves at runtime).
       run: |
         pnpm env use -g 20
-        npm_lifecycle_event=prepublishOnly pnpm exec publish-packed --prune --npm-client=pnpm --dest=dist
-        pnpm pack
+        rm -rf /tmp/pnpm-deploy
+        pnpm --filter=pnpm deploy --legacy --prod /tmp/pnpm-deploy
+        cp -RP /tmp/pnpm-deploy/node_modules pnpm/dist/node_modules
+        cd pnpm && pnpm pack
     - name: Upload pnpm tarball
       if: matrix.platform == 'ubuntu-latest' && matrix.node[0] == 22
       uses: actions/upload-artifact@v4
