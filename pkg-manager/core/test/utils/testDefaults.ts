@@ -39,6 +39,7 @@ export function testDefaults<T> (
     },
     storeController,
     storeDir,
+    blockExoticSubdeps: false,
     ...opts,
   } as (
     InstallOptions &

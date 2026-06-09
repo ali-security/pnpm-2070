@@ -1,6 +1,6 @@
 import { prepareEmpty } from '@pnpm/prepare'
 import { addDependenciesToPackage } from '@pnpm/core'
-import { testDefaults } from '../utils/index.js'
+import { testDefaults } from '../utils'
 
 test.skip('blockExoticSubdeps disallows git dependencies in subdependencies', async () => {
   prepareEmpty()
